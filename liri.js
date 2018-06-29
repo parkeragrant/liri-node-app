@@ -1,50 +1,158 @@
-var fs = require("dotenv").config();
+var dotEnv = require("dotenv").config();
 
-console.log(fs);
+var keys = require("./keys");
+
+var Twitter = require('twitter');
+
+var Spotify = require('node-spotify-api');
+
+var inquirer = require("inquirer");
+
+var request = require("request");
 
 var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
-console.log(spotify);
-console.log(client);
-
-// ----------------------------------------------------------------------------------------------------------------------------
-// Node Package Samples
+var movieSplit = "";
+var queryUrl = "";
 
 
-// Twitter Node Package Sample
+function mySpotifyFunction() {
 
-var Twitter = require('twitter');
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "What song?",
+                name: "songName"
+            },
+        ])
+        .then(function (songResponse) {
 
-var client = new Twitter({
-    consumer_key: '',
-    consumer_secret: '',
-    access_token_key: '',
-    access_token_secret: ''
-});
+            spotify.search({ type: 'track', query: songResponse.songName, limit: 1 }, function (err, data) {
+                if (err) {
+                    return console.log('Error occurred: ' + err);
+                }
 
-var params = { screen_name: 'nodejs' };
-client.get('statuses/user_timeline', params, function (error, tweets, response) {
-    if (!error) {
-        console.log(tweets);
-    }
-});
+                console.log(JSON.stringify(data.tracks.items[0].artists[0].name, null, 2));
+                console.log(JSON.stringify(data.tracks.items[0].name, null, 2));
+                console.log(JSON.stringify(data.tracks.items[0].preview_url, null, 2));
+                console.log(JSON.stringify(data.tracks.items[0].album.name, null, 2));
 
-// Spotify Node Pacakge Sample (need ID and Secret) 
+            });
 
-// var Spotify = require('node-spotify-api');
+        });
 
-// var spotify = new Spotify({
+};
 
-//     id: <your spotify client id>,
-//       secret: <your spotify client secret>
-//             });
+function myMovieFunction() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "What movie?",
+                name: "movieName"
+            },
+        ])
+        .then(function (movieResponse) {
 
-// spotify.search({type: 'track', query: 'All the Small Things' }, function (err, data) {
-//     if (err) {
-//         return console.log('Error occurred: ' + err);
-//             }
+            movieSplit = movieResponse.movieName.replace(/ /g, "+");
 
-//             console.log(data);
-//         });
+            queryUrl = "http://www.omdbapi.com/?t=" + movieSplit + "&y=&plot=short&apikey=trilogy";
 
+            // console.log(queryUrl);
+
+
+            request(queryUrl, (error, response, body) => {
+
+                // If the request is successful (i.e. if the response status code is 200)
+                if (!error && response.statusCode === 200) {
+
+                    // console.log(JSON.stringify(response, null, 2));
+
+
+                    console.log("The movie's title is: " + JSON.parse(body).Title);
+                    console.log("The movie's release year is: " + JSON.parse(body).Year);
+                    console.log("The movie's IMDB rating is: " + JSON.parse(body).imdbRating);
+                    console.log("The movie's country is: " + JSON.parse(body).Country);
+                    console.log("The movie's Rotten Tomatoe score is: " + JSON.parse(body).Ratings[1].Value);
+                    console.log("The movie's language is: " + JSON.parse(body).Language);
+                    console.log("The movie's plot is: " + JSON.parse(body).Plot);
+                    console.log("The movie's actors are: " + JSON.parse(body).Actors);
+
+
+                }
+            });
+
+        });
+
+}
+
+
+inquirer
+    .prompt([
+        {
+            type: "input",
+            message: "What is your name?",
+            name: "name"
+        },
+        {
+            type: "input",
+            message: "How can I help you today?",
+            name: "command"
+        }
+
+    ])
+    .then(function (promptResponse) {
+
+        switch (promptResponse.command) {
+            case "my-tweets":
+                tweets();
+                break;
+
+            case "spotify-this-song":
+
+                mySpotifyFunction();
+
+                break;
+
+            case "movie-this":
+
+                myMovieFunction();
+
+                break;
+
+            // case "do-what-it-says":
+
+            //     break;
+
+            default:
+                console.log("Liri does not know that command");
+
+        }
+
+    })
+
+
+
+function tweets() {
+
+    var params = {
+        screen_name: '@_parker_al',
+        count: 20
+    };
+    client.get('statuses/user_timeline', params, function (error, tweets, response) {
+        if (!error) {
+
+            for (var text in tweets) {
+
+                console.log("");
+                console.log(tweets[text].text);
+                console.log("");
+                console.log("=============================");
+
+            };
+        };
+
+    });
+};
