@@ -58,10 +58,13 @@ function myMovieFunction() {
 
             movieSplit = movieResponse.movieName.replace(/ /g, "+");
 
+            if (movieSplit === "") {
+                movieSplit = "mr+nobody"
+            }
+
             queryUrl = "http://www.omdbapi.com/?t=" + movieSplit + "&y=&plot=short&apikey=trilogy";
 
             // console.log(queryUrl);
-
 
             request(queryUrl, (error, response, body) => {
 
@@ -69,7 +72,6 @@ function myMovieFunction() {
                 if (!error && response.statusCode === 200) {
 
                     // console.log(JSON.stringify(response, null, 2));
-
 
                     console.log("The movie's title is: " + JSON.parse(body).Title);
                     console.log("The movie's release year is: " + JSON.parse(body).Year);
@@ -82,7 +84,11 @@ function myMovieFunction() {
 
 
                 }
+
             });
+
+
+
 
         });
 
